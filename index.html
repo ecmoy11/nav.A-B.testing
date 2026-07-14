@@ -258,13 +258,6 @@ textarea:focus,input:focus{border-color:var(--ink);}
     <button class="opt-btn" data-v="skip">Skip</button>
   </div>
 
-  <label class="q">So we know you're a real person and not a robot, please choose "Somewhat clear" here.</label>
-  <div class="opts row" data-q="wrap_attn">
-    <button class="opt-btn" data-v="veryunclear">Very unclear</button>
-    <button class="opt-btn" data-v="somewhatclear">Somewhat clear</button>
-    <button class="opt-btn" data-v="veryclear">Very clear</button>
-  </div>
-
   <label class="q">Anything else you want to tell us? <span class="opt">(optional)</span></label>
   <textarea data-q="comments"></textarea>
 
@@ -469,7 +462,7 @@ document.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',()=>
 const REQUIRED={
   sQ:['recall','where','clarity','worry'],
   sC:['cmp_easier','cmp_prefer'],
-  sW:['wrap_er','wrap_age','wrap_attn']
+  sW:['wrap_er','wrap_age']
 };
 const NEXTBTN={sQ:'qNext',sC:'cNext',sW:'wNext'};
 function checkRequired(stepId){
@@ -500,14 +493,13 @@ const COLS=['pid','test','order','first_variant','second_variant',
   'current_recall','current_where','current_first','current_clarity','current_worry','current_missing','current_dwell_ms',
   'inwait_recall','inwait_where','inwait_first','inwait_clarity','inwait_worry','inwait_missing','inwait_dwell_ms',
   'cmp_easier_variant','cmp_prefer_variant','cmp_why','cmp_easier','cmp_prefer',
-  'wrap_er','wrap_age','attn_pass','wrap_attn','comments',
+  'wrap_er','wrap_age','comments',
   'clicks_current','clicks_inwait','startedAt','completedAt','ua','vw'];
 let payload=null;
 async function submitAll(){
   collectAnswers('sW','');
   /* open the page with ?test at the end of the URL to mark your own dry runs */
   data.test=/(^|[?&])test\b/.test(location.search)?'TEST':'';
-  data.attn_pass=(data.wrap_attn==='somewhatclear');
   data.clicks_current=JSON.stringify(clicks.current);
   data.clicks_inwait=JSON.stringify(clicks.inwait);
   data.completedAt=new Date().toISOString();
