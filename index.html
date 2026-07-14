@@ -394,7 +394,12 @@ if(!SCRIPT_URL) document.getElementById('previewBanner').style.display='block';
 
 /* ---------- flow ---------- */
 function show(id){document.querySelectorAll('.step').forEach(s=>s.classList.remove('show'));document.getElementById(id).classList.add('show');window.scrollTo(0,0);}
-async function start(){ await assign(); show('s1'); }
+let started=false;
+async function start(){
+  if(started) return; started=true;                      /* guard: double-clicking Start must not consume two participant numbers */
+  document.getElementById('startBtn').disabled=true;
+  await assign(); show('s1');
+}
 function showVariant(i){
   vIndex=i;
   const key=order[i];
