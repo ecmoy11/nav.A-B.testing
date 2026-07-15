@@ -175,6 +175,7 @@ textarea:focus,input:focus{border-color:var(--ink);}
       <button type="button" class="micbtn" id="micBtn" onclick="toggleMic()">&#127908; Record your answer</button>
       <span class="micstate" id="micState">Optional — only the researcher hears it.</span>
     </div>
+    <audio id="recPlay" controls style="display:none;width:100%;margin:2px 0 10px;"></audio>
     <textarea data-q="think" placeholder="Record with the button above, or just type. A sentence or two is plenty."></textarea>
     <button class="btn tnext" disabled onclick="nextTask()">Next</button>
   </div>
@@ -439,6 +440,8 @@ function showVariant(i){
   setMicUI(false);
   const ms=document.getElementById('micState');
   if(ms) ms.textContent='Optional — only the researcher hears it.';
+  const au=document.getElementById('recPlay');
+  if(au){ if(au.src) URL.revokeObjectURL(au.src); au.removeAttribute('src'); au.style.display='none'; }
   vStart=Date.now();
   show('sV');
   showTask(0);
@@ -498,9 +501,14 @@ async function toggleMic(){
     mediaRec.onstop=()=>{
       stream.getTracks().forEach(t=>t.stop());
       clearTimeout(recTimer);
-      recBlob[order[vIndex]]=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
+      const blob=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
+      recBlob[order[vIndex]]=blob;
       setMicUI(false);
-      document.getElementById('micState').textContent='Recorded '+Math.max(1,Math.round((Date.now()-recStartT)/1000))+'s ✓ — tap again to re-record.';
+      document.getElementById('micState').textContent='Recorded '+Math.max(1,Math.round((Date.now()-recStartT)/1000))+'s ✓ — check it below, or tap again to re-record.';
+      const au=document.getElementById('recPlay');
+      if(au.src) URL.revokeObjectURL(au.src);
+      au.src=URL.createObjectURL(blob);
+      au.style.display='block';
       gateTask();
     };
     mediaRec.start();
