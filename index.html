@@ -122,6 +122,18 @@ textarea:focus,input:focus{border-color:var(--ink);}
 .thumb b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px;}
 .mini{overflow:hidden;pointer-events:none;margin-top:6px;}
 .mini .mscreen{width:312px;text-align:left;transform-origin:top left;}
+/* one-task-at-a-time cards */
+.tcard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px;display:none;}
+.tcard.act{display:block;animation:rise .3s ease both;}
+.tcard label.q{margin-top:14px;}
+.tcard label.q:first-of-type{margin-top:0;}
+.tcard .btn{margin-top:16px;height:46px;}
+.tprog{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;}
+.microw{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.micbtn{border:1.5px solid var(--line2);background:#fff;border-radius:12px;padding:10px 14px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;}
+.micbtn.live{border-color:#C0392B;color:#C0392B;animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.25);}50%{box-shadow:0 0 0 7px rgba(192,57,43,0);}}
+.micstate{font-size:12.5px;color:var(--mut);}
 </style>
 </head>
 <body>
@@ -147,60 +159,82 @@ textarea:focus,input:focus{border-color:var(--ink);}
   <h1>Imagine this is you</h1>
   <div class="card">
     <p class="lead" style="margin-top:0;">You came to the emergency room this morning with chest discomfort. A nurse checked you at the front desk about ten minutes ago and said you're safe to wait. You're now sitting in the waiting room.</p>
-    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen with a few questions underneath. Use the screen like you would on your own phone — tap anything — and answer the questions while you look. There's no memory test; the screen stays in front of you.</p>
+    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen, with one small task at a time above it. Use the screen like you would on your own phone — tap anything. On the first task you can speak your answer instead of typing if you like; only the words are saved, never a recording.</p>
   </div>
   <button class="btn" onclick="showVariant(0)">Show me the screen</button>
 </section>
 
-<!-- 2 · variant view + task questions on one page (reused for both variants) -->
+<!-- 2 · variant view: one task at a time, the screen stays present throughout (reused for both variants) -->
 <section class="step" id="sV">
   <div class="prog" id="vProg">Screen 1 of 2</div>
-  <h2 style="margin-bottom:2px;">Use the screen, answer as you go</h2>
-  <p class="lead" style="margin-top:4px;">This is the app's main screen. Tap around like it's your own phone. The questions below can all be answered using the screen — it stays right here the whole time.</p>
+
+  <div class="tcard task" id="t_think">
+    <div class="tprog">Task 1 of 5</div>
+    <label class="q">Take a moment with the screen below. In your own words, what is it telling you about your situation?</label>
+    <div class="microw" id="micRow">
+      <button type="button" class="micbtn" id="micBtn" onclick="toggleMic()">&#127908; Speak your answer</button>
+      <span class="micstate" id="micState">Voice stays on your device — only the words are saved.</span>
+    </div>
+    <textarea data-q="think" placeholder="Talk using the button above, or just type. A sentence or two is plenty."></textarea>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_wait">
+    <div class="tprog">Task 2 of 5</div>
+    <label class="q">How long does the app say you'll likely wait?</label>
+    <div class="opts" data-q="wait">
+      <button class="opt-btn" data-v="under15">Under 15 minutes</button>
+      <button class="opt-btn" data-v="15-30">15 to 30 minutes</button>
+      <button class="opt-btn" data-v="30-60">30 to 60 minutes</button>
+      <button class="opt-btn" data-v="45-90">45 to 90 minutes</button>
+      <button class="opt-btn" data-v="cantfind">I can't find it</button>
+    </div>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_next">
+    <div class="tprog">Task 3 of 5</div>
+    <label class="q">According to the app, what happens next for you?</label>
+    <div class="opts" data-q="next">
+      <button class="opt-btn" data-v="clinician">I'll see a clinician</button>
+      <button class="opt-btn" data-v="triageassess">I'll have a triage assessment</button>
+      <button class="opt-btn" data-v="bloodwork">I'll have blood drawn</button>
+      <button class="opt-btn" data-v="discharge">I'll be discharged</button>
+      <button class="opt-btn" data-v="canttell">I can't tell from the screen</button>
+    </div>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_triage">
+    <div class="tprog">Task 4 of 5</div>
+    <label class="q">The screen mentions "Triage level 3." Using the screen below, find out more about what that means. What does your triage level describe?</label>
+    <div class="opts" data-q="triage">
+      <button class="opt-btn" data-v="howsick">How sick I feel</button>
+      <button class="opt-btn" data-v="steps">How many steps my care will likely take</button>
+      <button class="opt-btn" data-v="howlong">Exactly how long I'll wait</button>
+      <button class="opt-btn" data-v="notfound">I couldn't find an explanation</button>
+    </div>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_feel">
+    <div class="tprog">Task 5 of 5</div>
+    <label class="q">How clear is this screen?</label>
+    <div class="scale" data-q="clarity">
+      <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
+    </div>
+    <div class="scale-labels"><span>Very confusing</span><span>Very clear</span></div>
+    <label class="q">How does this screen make you feel about your wait?</label>
+    <div class="scale" data-q="worry">
+      <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
+    </div>
+    <div class="scale-labels"><span>Much calmer</span><span>Much more worried</span></div>
+    <label class="q">Anything confusing or hard to find? <span class="opt">(optional)</span></label>
+    <textarea data-q="confusing" placeholder="Leave blank if nothing comes to mind"></textarea>
+    <button class="btn tnext" disabled onclick="nextTask()">Continue</button>
+  </div>
+
   <div id="phoneMount"></div>
-
-  <label class="q">How long does the app say you'll likely wait?</label>
-  <div class="opts" data-q="wait">
-    <button class="opt-btn" data-v="under15">Under 15 minutes</button>
-    <button class="opt-btn" data-v="15-30">15 to 30 minutes</button>
-    <button class="opt-btn" data-v="30-60">30 to 60 minutes</button>
-    <button class="opt-btn" data-v="45-90">45 to 90 minutes</button>
-    <button class="opt-btn" data-v="cantfind">I can't find it</button>
-  </div>
-
-  <label class="q">According to the app, what happens next for you?</label>
-  <div class="opts" data-q="next">
-    <button class="opt-btn" data-v="clinician">I'll see a clinician</button>
-    <button class="opt-btn" data-v="triageassess">I'll have a triage assessment</button>
-    <button class="opt-btn" data-v="bloodwork">I'll have blood drawn</button>
-    <button class="opt-btn" data-v="discharge">I'll be discharged</button>
-    <button class="opt-btn" data-v="canttell">I can't tell from the screen</button>
-  </div>
-
-  <label class="q">The screen mentions "Triage level 3." Using the app, find out more about what that means. What does your triage level describe?</label>
-  <div class="opts" data-q="triage">
-    <button class="opt-btn" data-v="howsick">How sick I feel</button>
-    <button class="opt-btn" data-v="steps">How many steps my care will likely take</button>
-    <button class="opt-btn" data-v="howlong">Exactly how long I'll wait</button>
-    <button class="opt-btn" data-v="notfound">I couldn't find an explanation</button>
-  </div>
-
-  <label class="q">How clear is this screen?</label>
-  <div class="scale" data-q="clarity">
-    <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
-  </div>
-  <div class="scale-labels"><span>Very confusing</span><span>Very clear</span></div>
-
-  <label class="q">How does this screen make you feel about your wait?</label>
-  <div class="scale" data-q="worry">
-    <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
-  </div>
-  <div class="scale-labels"><span>Much calmer</span><span>Much more worried</span></div>
-
-  <label class="q">Was anything on this screen confusing or hard to find? <span class="opt">(optional)</span></label>
-  <textarea data-q="confusing" placeholder="Leave blank if nothing comes to mind"></textarea>
-
-  <button class="btn" id="vNext" disabled onclick="afterScreen()">Continue</button>
 </section>
 
 <!-- 4 · comparison -->
@@ -401,9 +435,76 @@ function showVariant(i){
   const key=order[i];
   document.getElementById('vProg').textContent='Screen '+(i+1)+' of 2';
   document.getElementById('phoneMount').innerHTML=phoneShell(VARIANTS[key].inner);
-  resetQuestions('sV');               /* Continue unlocks when the required questions are answered */
+  resetQuestions('sV');
   vStart=Date.now();
   show('sV');
+  showTask(0);
+}
+
+/* ---------- one-task-at-a-time engine (time on task recorded silently) ---------- */
+const TASK_IDS=['t_think','t_wait','t_next','t_triage','t_feel'];
+const TASK_REQ={t_think:['think'],t_wait:['wait'],t_next:['next'],t_triage:['triage'],t_feel:['clarity','worry']};
+const TASK_TIMEKEY={t_think:'think_ms',t_wait:'wait_ms',t_next:'next_ms',t_triage:'triage_ms',t_feel:'feel_ms'};
+let taskIndex=0, taskStart=0;
+function showTask(i){
+  taskIndex=i;
+  TASK_IDS.forEach((id,j)=>document.getElementById(id).classList.toggle('act',j===i));
+  taskStart=Date.now();
+  gateTask();
+}
+function gateTask(){
+  const card=document.getElementById(TASK_IDS[taskIndex]);
+  const ok=TASK_REQ[TASK_IDS[taskIndex]].every(q=>{
+    const el=card.querySelector('[data-q="'+q+'"]');
+    if(!el) return false;
+    if(el.tagName==='TEXTAREA') return el.value.trim().length>0;
+    return !!el.querySelector('.on');
+  });
+  card.querySelector('.tnext').disabled=!ok;
+}
+function nextTask(){
+  stopMic();
+  data[order[vIndex]+'_'+TASK_TIMEKEY[TASK_IDS[taskIndex]]]=Date.now()-taskStart;
+  if(taskIndex<TASK_IDS.length-1){ showTask(taskIndex+1); }
+  else{ afterScreen(); }
+}
+
+/* ---------- optional voice input: browser speech-to-text, transcript only, no audio kept ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null, recLive=false, recFinal='';
+if(!SR){ document.getElementById('micRow').style.display='none'; }
+function toggleMic(){
+  if(recLive){ stopMic(); return; }
+  const ta=document.querySelector('#t_think textarea');
+  recFinal=ta.value?ta.value.trim()+' ':'';
+  rec=new SR(); rec.lang='en-US'; rec.continuous=true; rec.interimResults=true;
+  rec.onresult=e=>{
+    let interim='';
+    for(let k=e.resultIndex;k<e.results.length;k++){
+      const r=e.results[k];
+      if(r.isFinal) recFinal+=r[0].transcript+' ';
+      else interim+=r[0].transcript;
+    }
+    ta.value=(recFinal+interim).trim();
+    gateTask();
+  };
+  rec.onerror=ev=>{
+    stopMic();
+    document.getElementById('micState').textContent=(ev.error==='not-allowed')
+      ? 'Microphone blocked — typing works just as well.'
+      : 'Voice hiccup — typing works just as well.';
+  };
+  rec.onend=()=>{ recLive=false; setMicUI(false); };
+  try{ rec.start(); recLive=true; setMicUI(true); data[order[vIndex]+'_think_voice']=true; }
+  catch(e){ recLive=false; setMicUI(false); }
+}
+function stopMic(){ if(rec&&recLive){ recLive=false; try{rec.stop();}catch(e){} } setMicUI(false); }
+function setMicUI(on){
+  const b=document.getElementById('micBtn'); if(!b) return;
+  b.classList.toggle('live',on);
+  b.innerHTML=on?'&#9632; Stop':'&#127908; Speak your answer';
+  const s=document.getElementById('micState');
+  if(on) s.textContent='Listening… tap Stop when you’re done.';
 }
 function logClick(id){ const key=order[vIndex]; if(clicks[key]) clicks[key].push({t:Date.now()-vStart,id}); }
 function toggleExpl(el){ const x=el.closest('.pcard').querySelector('.expl'); x.style.display=(x.style.display==='none')?'block':'none'; }
@@ -442,16 +543,19 @@ document.querySelectorAll('.opts,.scale').forEach(g=>{
     const b=e.target.closest('button'); if(!b) return;
     g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
-    checkRequired(g.closest('.step').id);
+    const sid=g.closest('.step').id;
+    if(sid==='sV') gateTask(); else checkRequired(sid);
   });
 });
-document.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',()=>checkRequired(t.closest('.step').id)));
+document.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',()=>{
+  const sid=t.closest('.step').id;
+  if(sid==='sV') gateTask(); else checkRequired(sid);
+}));
 const REQUIRED={
-  sV:['wait','next','triage','clarity','worry'],
   sC:['cmp_easier','cmp_prefer'],
   sW:['wrap_er','wrap_age']
 };
-const NEXTBTN={sV:'vNext',sC:'cNext',sW:'wNext'};
+const NEXTBTN={sC:'cNext',sW:'wNext'};
 function checkRequired(stepId){
   const req=REQUIRED[stepId]; if(!req) return;
   const step=document.getElementById(stepId);
@@ -470,15 +574,16 @@ function resetQuestions(stepId){
   const step=document.getElementById(stepId);
   step.querySelectorAll('.on').forEach(b=>b.classList.remove('on'));
   step.querySelectorAll('textarea').forEach(t=>t.value='');
-  document.getElementById(NEXTBTN[stepId]).disabled=true;
+  step.querySelectorAll('.tnext').forEach(b=>b.disabled=true);
+  if(NEXTBTN[stepId]) document.getElementById(NEXTBTN[stepId]).disabled=true;
 }
 
 /* ---------- submit ---------- */
 /* Fixed column order for the sheet: identity → screen answers → comparison → wrap-up → logs/meta.
    The sheet's header row is created from the first submission, so this order = the sheet's order. */
 const COLS=['pid','test','order','first_variant','second_variant',
-  'current_wait','current_next','current_triage','current_opened_triage','current_clarity','current_worry','current_confusing','current_dwell_ms',
-  'inwait_wait','inwait_next','inwait_triage','inwait_opened_triage','inwait_clarity','inwait_worry','inwait_confusing','inwait_dwell_ms',
+  'current_think','current_think_voice','current_think_ms','current_wait','current_wait_ms','current_next','current_next_ms','current_triage','current_triage_ms','current_opened_triage','current_clarity','current_worry','current_feel_ms','current_confusing','current_dwell_ms',
+  'inwait_think','inwait_think_voice','inwait_think_ms','inwait_wait','inwait_wait_ms','inwait_next','inwait_next_ms','inwait_triage','inwait_triage_ms','inwait_opened_triage','inwait_clarity','inwait_worry','inwait_feel_ms','inwait_confusing','inwait_dwell_ms',
   'cmp_easier_variant','cmp_prefer_variant','cmp_why','cmp_easier','cmp_prefer',
   'wrap_er','wrap_age','comments',
   'clicks_current','clicks_inwait','startedAt','completedAt','ua','vw'];
