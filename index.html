@@ -147,63 +147,60 @@ textarea:focus,input:focus{border-color:var(--ink);}
   <h1>Imagine this is you</h1>
   <div class="card">
     <p class="lead" style="margin-top:0;">You came to the emergency room this morning with chest discomfort. A nurse checked you at the front desk about ten minutes ago and said you're safe to wait. You're now sitting in the waiting room.</p>
-    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen. Look around and tap anything you're curious about, just like you would on your own phone.</p>
+    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen with a few questions underneath. Use the screen like you would on your own phone — tap anything — and answer the questions while you look. There's no memory test; the screen stays in front of you.</p>
   </div>
   <button class="btn" onclick="showVariant(0)">Show me the screen</button>
 </section>
 
-<!-- 2 · variant view (reused for both) -->
+<!-- 2 · variant view + task questions on one page (reused for both variants) -->
 <section class="step" id="sV">
   <div class="prog" id="vProg">Screen 1 of 2</div>
-  <h2 style="margin-bottom:2px;">Take a look around</h2>
-  <p class="lead" style="margin-top:4px;">Tap anything you're curious about. In the next section you'll be asked a few questions about this screen from memory, so take your time before continuing.</p>
+  <h2 style="margin-bottom:2px;">Use the screen, answer as you go</h2>
+  <p class="lead" style="margin-top:4px;">This is the app's main screen. Tap around like it's your own phone. The questions below can all be answered using the screen — it stays right here the whole time.</p>
   <div id="phoneMount"></div>
-  <div class="dwell" id="dwellNote"></div>
-  <button class="btn" id="vNext" disabled onclick="afterVariant()">Continue</button>
-</section>
 
-<!-- 3 · per-variant questions (reused) -->
-<section class="step" id="sQ">
-  <div class="prog" id="qProg">About that screen</div>
-  <h2>A few quick questions</h2>
-  <p class="lead" style="margin-top:4px;">From memory is fine. Best guesses are useful too.</p>
-
-  <label class="q">How long did the app say the wait would likely be?</label>
-  <div class="opts" data-q="recall">
+  <label class="q">How long does the app say you'll likely wait?</label>
+  <div class="opts" data-q="wait">
     <button class="opt-btn" data-v="under15">Under 15 minutes</button>
     <button class="opt-btn" data-v="15-30">15 to 30 minutes</button>
     <button class="opt-btn" data-v="30-60">30 to 60 minutes</button>
     <button class="opt-btn" data-v="45-90">45 to 90 minutes</button>
-    <button class="opt-btn" data-v="dontremember">I don't remember</button>
+    <button class="opt-btn" data-v="cantfind">I can't find it</button>
   </div>
 
-  <label class="q">Where are you in your ER visit right now, according to the screen?</label>
-  <div class="opts" data-q="where">
-    <button class="opt-btn" data-v="notchecked">Still waiting for a nurse to check me</button>
-    <button class="opt-btn" data-v="checked-waiting">Checked by a nurse, waiting for a care space</button>
-    <button class="opt-btn" data-v="incare">In a care space being treated</button>
-    <button class="opt-btn" data-v="unsure">I couldn't tell</button>
+  <label class="q">According to the app, what happens next for you?</label>
+  <div class="opts" data-q="next">
+    <button class="opt-btn" data-v="clinician">I'll see a clinician</button>
+    <button class="opt-btn" data-v="triageassess">I'll have a triage assessment</button>
+    <button class="opt-btn" data-v="bloodwork">I'll have blood drawn</button>
+    <button class="opt-btn" data-v="discharge">I'll be discharged</button>
+    <button class="opt-btn" data-v="canttell">I can't tell from the screen</button>
   </div>
 
-  <label class="q">What's the first thing you noticed on the screen?</label>
-  <textarea data-q="first" placeholder="A word or a sentence, whatever comes to mind"></textarea>
+  <label class="q">The screen mentions "Triage level 3." Using the app, find out more about what that means. What does your triage level describe?</label>
+  <div class="opts" data-q="triage">
+    <button class="opt-btn" data-v="howsick">How sick I feel</button>
+    <button class="opt-btn" data-v="steps">How many steps my care will likely take</button>
+    <button class="opt-btn" data-v="howlong">Exactly how long I'll wait</button>
+    <button class="opt-btn" data-v="notfound">I couldn't find an explanation</button>
+  </div>
 
-  <label class="q">How clear was this screen?</label>
+  <label class="q">How clear is this screen?</label>
   <div class="scale" data-q="clarity">
     <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
   </div>
   <div class="scale-labels"><span>Very confusing</span><span>Very clear</span></div>
 
-  <label class="q">How would this screen make you feel about your wait?</label>
+  <label class="q">How does this screen make you feel about your wait?</label>
   <div class="scale" data-q="worry">
     <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
   </div>
   <div class="scale-labels"><span>Much calmer</span><span>Much more worried</span></div>
 
-  <label class="q">Was anything missing that you wanted to know? <span class="opt">(optional)</span></label>
-  <textarea data-q="missing" placeholder="Leave blank if nothing comes to mind"></textarea>
+  <label class="q">Was anything on this screen confusing or hard to find? <span class="opt">(optional)</span></label>
+  <textarea data-q="confusing" placeholder="Leave blank if nothing comes to mind"></textarea>
 
-  <button class="btn" id="qNext" disabled onclick="afterQuestions()">Continue</button>
+  <button class="btn" id="vNext" disabled onclick="afterScreen()">Continue</button>
 </section>
 
 <!-- 4 · comparison -->
@@ -367,8 +364,7 @@ const VARIANTS={
 /* ---------- state ---------- */
 let pid=null, order=null;           /* order: ['current','inwait'] or reversed */
 let vIndex=0;                        /* which variant is on screen (0 or 1) */
-let vStart=0, dwellTimer=null;
-const MIN_DWELL=8;                   /* seconds before Continue unlocks */
+let vStart=0;
 const data={
   startedAt:new Date().toISOString(),
   ua:navigator.userAgent, vw:window.innerWidth+'x'+window.innerHeight
@@ -405,30 +401,16 @@ function showVariant(i){
   const key=order[i];
   document.getElementById('vProg').textContent='Screen '+(i+1)+' of 2';
   document.getElementById('phoneMount').innerHTML=phoneShell(VARIANTS[key].inner);
-  const btn=document.getElementById('vNext'); btn.disabled=true;
-  let left=MIN_DWELL; vStart=Date.now();
-  const note=document.getElementById('dwellNote');
-  note.textContent='The continue button unlocks in '+left+'s';
-  clearInterval(dwellTimer);
-  dwellTimer=setInterval(()=>{
-    left--;
-    if(left<=0){clearInterval(dwellTimer);btn.disabled=false;note.textContent='';}
-    else note.textContent='The continue button unlocks in '+left+'s';
-  },1000);
+  resetQuestions('sV');               /* Continue unlocks when the required questions are answered */
+  vStart=Date.now();
   show('sV');
 }
 function logClick(id){ const key=order[vIndex]; if(clicks[key]) clicks[key].push({t:Date.now()-vStart,id}); }
 function toggleExpl(el){ const x=el.closest('.pcard').querySelector('.expl'); x.style.display=(x.style.display==='none')?'block':'none'; }
-function afterVariant(){
+function afterScreen(){
   const key=order[vIndex];
   data[key+'_dwell_ms']=Date.now()-vStart;
-  resetQuestions('sQ');
-  document.getElementById('qProg').textContent='About screen '+(vIndex+1);
-  show('sQ');
-}
-function afterQuestions(){
-  const key=order[vIndex];
-  collectAnswers('sQ',key+'_');
+  collectAnswers('sV',key+'_');
   if(vIndex===0){ showVariant(1); }
   else{
     show('sC');
@@ -465,11 +447,11 @@ document.querySelectorAll('.opts,.scale').forEach(g=>{
 });
 document.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',()=>checkRequired(t.closest('.step').id)));
 const REQUIRED={
-  sQ:['recall','where','clarity','worry'],
+  sV:['wait','next','triage','clarity','worry'],
   sC:['cmp_easier','cmp_prefer'],
   sW:['wrap_er','wrap_age']
 };
-const NEXTBTN={sQ:'qNext',sC:'cNext',sW:'wNext'};
+const NEXTBTN={sV:'vNext',sC:'cNext',sW:'wNext'};
 function checkRequired(stepId){
   const req=REQUIRED[stepId]; if(!req) return;
   const step=document.getElementById(stepId);
@@ -495,8 +477,8 @@ function resetQuestions(stepId){
 /* Fixed column order for the sheet: identity → screen answers → comparison → wrap-up → logs/meta.
    The sheet's header row is created from the first submission, so this order = the sheet's order. */
 const COLS=['pid','test','order','first_variant','second_variant',
-  'current_recall','current_where','current_first','current_clarity','current_worry','current_missing','current_dwell_ms',
-  'inwait_recall','inwait_where','inwait_first','inwait_clarity','inwait_worry','inwait_missing','inwait_dwell_ms',
+  'current_wait','current_next','current_triage','current_opened_triage','current_clarity','current_worry','current_confusing','current_dwell_ms',
+  'inwait_wait','inwait_next','inwait_triage','inwait_opened_triage','inwait_clarity','inwait_worry','inwait_confusing','inwait_dwell_ms',
   'cmp_easier_variant','cmp_prefer_variant','cmp_why','cmp_easier','cmp_prefer',
   'wrap_er','wrap_age','comments',
   'clicks_current','clicks_inwait','startedAt','completedAt','ua','vw'];
@@ -505,6 +487,9 @@ async function submitAll(){
   collectAnswers('sW','');
   /* open the page with ?test at the end of the URL to mark your own dry runs */
   data.test=/(^|[?&])test\b/.test(location.search)?'TEST':'';
+  /* behavioral task success: did they actually open the triage explainer on each screen? */
+  data.current_opened_triage=clicks.current.some(c=>c.id==='triage-panel');
+  data.inwait_opened_triage=clicks.inwait.some(c=>c.id==='triage-panel');
   data.clicks_current=JSON.stringify(clicks.current);
   data.clicks_inwait=JSON.stringify(clicks.inwait);
   data.completedAt=new Date().toISOString();
@@ -521,8 +506,7 @@ async function submitAll(){
   }
 }
 /* debug/test handle (not used by participants) */
-window.__study={get order(){return order},get data(){return data},get clicks(){return clicks},
-  fastForward(){clearInterval(dwellTimer);vStart=Date.now()-20000;document.getElementById('vNext').disabled=false;}};
+window.__study={get order(){return order},get data(){return data},get clicks(){return clicks}};
 function downloadData(){
   const blob=new Blob([JSON.stringify(payload||data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
