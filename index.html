@@ -146,7 +146,7 @@ textarea:focus,input:focus{border-color:var(--ink);}
   <p class="lead">You'll look at two versions of one phone screen, answer a few questions about each, and tell us which you'd rather have during a real ER visit. It takes about 5 to 7 minutes.</p>
   <div class="card">
     <h2>Before you start</h2>
-    <p class="lead" style="margin-top:6px;">Your answers are anonymous. We don't collect your name, email, or anything that identifies you. There are no right or wrong answers; we're testing the designs, not you. You can stop at any time by closing this page.</p>
+    <p class="lead" style="margin-top:6px;">Your answers are anonymous — we don't collect your name or email. One question on each screen offers an optional voice recording: if you use it, only the researcher listens, and recordings are deleted when the project ends. Prefer not to record? Just type instead. There are no right or wrong answers; we're testing the designs, not you. You can stop at any time by closing this page.</p>
     <label class="consent"><input type="checkbox" id="consentBox" onchange="document.getElementById('startBtn').disabled=!this.checked">
       I understand this is a student research study, my answers are anonymous, and I agree to take part.</label>
   </div>
@@ -159,7 +159,7 @@ textarea:focus,input:focus{border-color:var(--ink);}
   <h1>Imagine this is you</h1>
   <div class="card">
     <p class="lead" style="margin-top:0;">You came to the emergency room this morning with chest discomfort. A nurse checked you at the front desk about ten minutes ago and said you're safe to wait. You're now sitting in the waiting room.</p>
-    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen, with one small task at a time above it. Use the screen like you would on your own phone — tap anything. On the first task you can speak your answer instead of typing if you like; only the words are saved, never a recording.</p>
+    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen, with one small task at a time above it. Use the screen like you would on your own phone — tap anything. On the first task you can record your answer out loud instead of typing, if you like.</p>
   </div>
   <button class="btn" onclick="showVariant(0)">Show me the screen</button>
 </section>
@@ -172,10 +172,10 @@ textarea:focus,input:focus{border-color:var(--ink);}
     <div class="tprog">Task 1 of 5</div>
     <label class="q">Take a moment with the screen below. In your own words, what is it telling you about your situation?</label>
     <div class="microw" id="micRow">
-      <button type="button" class="micbtn" id="micBtn" onclick="toggleMic()">&#127908; Speak your answer</button>
-      <span class="micstate" id="micState">Voice stays on your device — only the words are saved.</span>
+      <button type="button" class="micbtn" id="micBtn" onclick="toggleMic()">&#127908; Record your answer</button>
+      <span class="micstate" id="micState">Optional — only the researcher hears it.</span>
     </div>
-    <textarea data-q="think" placeholder="Talk using the button above, or just type. A sentence or two is plenty."></textarea>
+    <textarea data-q="think" placeholder="Record with the button above, or just type. A sentence or two is plenty."></textarea>
     <button class="btn tnext" disabled onclick="nextTask()">Next</button>
   </div>
 
@@ -436,6 +436,9 @@ function showVariant(i){
   document.getElementById('vProg').textContent='Screen '+(i+1)+' of 2';
   document.getElementById('phoneMount').innerHTML=phoneShell(VARIANTS[key].inner);
   resetQuestions('sV');
+  setMicUI(false);
+  const ms=document.getElementById('micState');
+  if(ms) ms.textContent='Optional — only the researcher hears it.';
   vStart=Date.now();
   show('sV');
   showTask(0);
@@ -453,13 +456,20 @@ function showTask(i){
   gateTask();
 }
 function gateTask(){
-  const card=document.getElementById(TASK_IDS[taskIndex]);
-  const ok=TASK_REQ[TASK_IDS[taskIndex]].every(q=>{
-    const el=card.querySelector('[data-q="'+q+'"]');
-    if(!el) return false;
-    if(el.tagName==='TEXTAREA') return el.value.trim().length>0;
-    return !!el.querySelector('.on');
-  });
+  const id=TASK_IDS[taskIndex];
+  const card=document.getElementById(id);
+  let ok;
+  if(id==='t_think'){
+    /* a recording OR typed text satisfies the think-aloud task */
+    ok=card.querySelector('[data-q="think"]').value.trim().length>0 || !!recBlob[order[vIndex]];
+  }else{
+    ok=TASK_REQ[id].every(q=>{
+      const el=card.querySelector('[data-q="'+q+'"]');
+      if(!el) return false;
+      if(el.tagName==='TEXTAREA') return el.value.trim().length>0;
+      return !!el.querySelector('.on');
+    });
+  }
   card.querySelector('.tnext').disabled=!ok;
 }
 function nextTask(){
@@ -469,42 +479,52 @@ function nextTask(){
   else{ afterScreen(); }
 }
 
-/* ---------- optional voice input: browser speech-to-text, transcript only, no audio kept ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null, recLive=false, recFinal='';
-if(!SR){ document.getElementById('micRow').style.display='none'; }
-function toggleMic(){
-  if(recLive){ stopMic(); return; }
-  const ta=document.querySelector('#t_think textarea');
-  recFinal=ta.value?ta.value.trim()+' ':'';
-  rec=new SR(); rec.lang='en-US'; rec.continuous=true; rec.interimResults=true;
-  rec.onresult=e=>{
-    let interim='';
-    for(let k=e.resultIndex;k<e.results.length;k++){
-      const r=e.results[k];
-      if(r.isFinal) recFinal+=r[0].transcript+' ';
-      else interim+=r[0].transcript;
-    }
-    ta.value=(recFinal+interim).trim();
-    gateTask();
-  };
-  rec.onerror=ev=>{
-    stopMic();
-    document.getElementById('micState').textContent=(ev.error==='not-allowed')
-      ? 'Microphone blocked — typing works just as well.'
-      : 'Voice hiccup — typing works just as well.';
-  };
-  rec.onend=()=>{ recLive=false; setMicUI(false); };
-  try{ rec.start(); recLive=true; setMicUI(true); data[order[vIndex]+'_think_voice']=true; }
-  catch(e){ recLive=false; setMicUI(false); }
+/* ---------- optional voice answers: real audio via MediaRecorder ----------
+   The recording is uploaded with the submission; the Apps Script saves it to
+   Drive and puts a link in the sheet. Typing remains the fallback everywhere. */
+const REC_LIMIT_MS=90000;                       /* 90s cap per recording */
+let mediaRec=null, recChunks=[], recTimer=null, recStartT=0;
+const recBlob={current:null,inwait:null};
+if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){
+  document.getElementById('micRow').style.display='none';
 }
-function stopMic(){ if(rec&&recLive){ recLive=false; try{rec.stop();}catch(e){} } setMicUI(false); }
+async function toggleMic(){
+  if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks=[];
+    mediaRec=new MediaRecorder(stream);
+    mediaRec.ondataavailable=e=>{ if(e.data&&e.data.size) recChunks.push(e.data); };
+    mediaRec.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      clearTimeout(recTimer);
+      recBlob[order[vIndex]]=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
+      setMicUI(false);
+      document.getElementById('micState').textContent='Recorded '+Math.max(1,Math.round((Date.now()-recStartT)/1000))+'s ✓ — tap again to re-record.';
+      gateTask();
+    };
+    mediaRec.start();
+    recStartT=Date.now();
+    setMicUI(true);
+    clearTimeout(recTimer);
+    recTimer=setTimeout(()=>{ if(mediaRec&&mediaRec.state==='recording') mediaRec.stop(); },REC_LIMIT_MS);
+  }catch(e){
+    document.getElementById('micState').textContent='Microphone unavailable — typing works just as well.';
+  }
+}
+function stopMic(){ if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); } }
 function setMicUI(on){
   const b=document.getElementById('micBtn'); if(!b) return;
   b.classList.toggle('live',on);
-  b.innerHTML=on?'&#9632; Stop':'&#127908; Speak your answer';
-  const s=document.getElementById('micState');
-  if(on) s.textContent='Listening… tap Stop when you’re done.';
+  b.innerHTML=on?'&#9632; Stop recording':'&#127908; Record your answer';
+  if(on) document.getElementById('micState').textContent='Recording… tap Stop when you’re done.';
+}
+async function blobB64(b){
+  if(!b) return '';
+  const bytes=new Uint8Array(await b.arrayBuffer());
+  let bin='';
+  for(let i=0;i<bytes.length;i+=32768){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768)); }
+  return btoa(bin);
 }
 function logClick(id){ const key=order[vIndex]; if(clicks[key]) clicks[key].push({t:Date.now()-vStart,id}); }
 function toggleExpl(el){ const x=el.closest('.pcard').querySelector('.expl'); x.style.display=(x.style.display==='none')?'block':'none'; }
@@ -582,8 +602,8 @@ function resetQuestions(stepId){
 /* Fixed column order for the sheet: identity → screen answers → comparison → wrap-up → logs/meta.
    The sheet's header row is created from the first submission, so this order = the sheet's order. */
 const COLS=['pid','test','order','first_variant','second_variant',
-  'current_think','current_think_voice','current_think_ms','current_wait','current_wait_ms','current_next','current_next_ms','current_triage','current_triage_ms','current_opened_triage','current_clarity','current_worry','current_feel_ms','current_confusing','current_dwell_ms',
-  'inwait_think','inwait_think_voice','inwait_think_ms','inwait_wait','inwait_wait_ms','inwait_next','inwait_next_ms','inwait_triage','inwait_triage_ms','inwait_opened_triage','inwait_clarity','inwait_worry','inwait_feel_ms','inwait_confusing','inwait_dwell_ms',
+  'current_think','current_think_audio','current_think_ms','current_wait','current_wait_ms','current_next','current_next_ms','current_triage','current_triage_ms','current_opened_triage','current_clarity','current_worry','current_feel_ms','current_confusing','current_dwell_ms',
+  'inwait_think','inwait_think_audio','inwait_think_ms','inwait_wait','inwait_wait_ms','inwait_next','inwait_next_ms','inwait_triage','inwait_triage_ms','inwait_opened_triage','inwait_clarity','inwait_worry','inwait_feel_ms','inwait_confusing','inwait_dwell_ms',
   'cmp_easier_variant','cmp_prefer_variant','cmp_why','cmp_easier','cmp_prefer',
   'wrap_er','wrap_age','comments',
   'clicks_current','clicks_inwait','startedAt','completedAt','ua','vw'];
@@ -600,6 +620,10 @@ async function submitAll(){
   data.completedAt=new Date().toISOString();
   payload={}; COLS.forEach(k=>payload[k]=(data[k]!==undefined)?data[k]:'');
   const btn=document.getElementById('wNext'); btn.disabled=true; btn.textContent='Sending…';
+  /* attach voice recordings (if any) as base64; the Apps Script saves them to Drive
+     and replaces these with links in the _think_audio columns */
+  if(recBlob.current){ payload.current_think_audio_b64=await blobB64(recBlob.current); payload.current_think_audio_mime=recBlob.current.type||'audio/webm'; }
+  if(recBlob.inwait){ payload.inwait_think_audio_b64=await blobB64(recBlob.inwait); payload.inwait_think_audio_mime=recBlob.inwait.type||'audio/webm'; }
   if(!SCRIPT_URL){ console.log('PREVIEW MODE · payload:',payload); show('sT'); return; }
   try{
     await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
