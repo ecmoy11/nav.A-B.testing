@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nav Health · ER App Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14171C; --sec:#5A6472; --mut:#9098A3;
+  --bg:#FAF8F5; --surface:#F1EDE7; --line:#E7E1D8; --line2:#DDD5C9;
+  --slate:#3E4E5A; --green:#1E9E6A; --green-soft:#E5F4ED;
+  --blue:#2563C9; --blue-soft:#E9F0FD; --amber:#C98A2B;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px;}
+.wrap{width:100%;max-width:560px;}
+.step{display:none;animation:rise .4s ease both;}
+.step.show{display:block;}
+@keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2;}
+h2{font-size:20px;font-weight:700;letter-spacing:-.015em;margin-bottom:6px;}
+p.lead{font-size:15px;color:var(--sec);line-height:1.6;margin-top:10px;}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:18px;}
+.btn{display:block;width:100%;height:52px;border:none;border-radius:16px;background:var(--ink);color:#fff;font-family:inherit;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:22px;}
+.btn:disabled{background:var(--line2);color:var(--mut);cursor:default;}
+.prog{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:10px;}
+label.q{display:block;font-size:15px;font-weight:600;margin:22px 0 10px;line-height:1.45;}
+label.q .opt{font-weight:500;color:var(--mut);font-size:13px;}
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opts.row{flex-direction:row;flex-wrap:wrap;}
+.opt-btn{border:1.5px solid var(--line2);background:#fff;border-radius:14px;padding:13px 15px;font-family:inherit;font-size:14.5px;font-weight:500;color:var(--ink);cursor:pointer;text-align:left;transition:all .12s ease;}
+.opt-btn.on{border-color:var(--ink);background:var(--ink);color:#fff;}
+.scale{display:flex;gap:6px;}
+.scale button{flex:1;height:44px;border:1.5px solid var(--line2);background:#fff;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;color:var(--sec);cursor:pointer;}
+.scale button.on{border-color:var(--ink);background:var(--ink);color:#fff;}
+.scale-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:6px;}
+textarea,input[type=text]{width:100%;border:1.5px solid var(--line2);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14.5px;color:var(--ink);background:#fff;outline:none;resize:vertical;}
+textarea{min-height:80px;}
+textarea:focus,input:focus{border-color:var(--ink);}
+.consent{display:flex;gap:12px;align-items:flex-start;margin-top:18px;font-size:14px;color:var(--sec);line-height:1.55;cursor:pointer;}
+.consent input{margin-top:3px;width:18px;height:18px;accent-color:var(--ink);}
+.note{font-size:13px;color:var(--mut);line-height:1.55;margin-top:14px;}
+.banner{background:var(--blue-soft);border:1px solid #cfe0fa;color:#1d4f9c;border-radius:14px;padding:12px 15px;font-size:13.5px;font-weight:600;margin-bottom:16px;display:none;}
+.err{background:#FBEAE7;border:1px solid #efc9c2;color:#8c3327;border-radius:14px;padding:12px 15px;font-size:13.5px;font-weight:600;margin-top:14px;display:none;}
+/* ---------- phone mockup (frame + styles lifted from the prototype) ---------- */
+.device{width:340px;max-width:100%;height:660px;margin:20px auto 0;border-radius:50px;background:#0b0b0d;padding:9px;box-shadow:0 18px 50px rgba(20,23,28,.28), inset 0 0 0 2px #2a2a2e;position:relative;}
+.shost{position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--bg);}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:104px;height:29px;background:#0b0b0d;border-radius:18px;z-index:60;}
+.sbar{position:absolute;top:0;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:14px 27px 0;z-index:55;font-size:13px;font-weight:600;pointer-events:none;}
+.sbar .ic{display:flex;gap:5px;align-items:center;}
+.sbar svg{width:16px;height:11px;}
+.pscroll{position:absolute;inset:0;overflow-y:auto;padding:62px 14px 26px;}
+.pscroll::-webkit-scrollbar{display:none;}
+.headrow{display:flex;justify-content:space-between;align-items:flex-start;margin:2px 3px 14px;}
+.ptitle{font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1.1;}
+.psub{font-size:12.5px;color:var(--sec);margin-top:4px;}
+.menubtn{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.menubtn svg{width:15px;height:15px;stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 1px 2px rgba(20,23,28,.05);padding:16px;margin-bottom:11px;cursor:pointer;}
+.pcard.dark{background:var(--slate);border-color:var(--slate);color:#fff;box-shadow:0 2px 6px rgba(51,65,76,.14), 0 12px 28px rgba(51,65,76,.24);}
+.kick{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);}
+.pcard.dark .kick{color:rgba(255,255,255,.6);}
+.wc-head{display:flex;align-items:center;gap:6px;}
+.wc-info{border:none;background:none;cursor:pointer;padding:0;display:inline-flex;}
+.wc-info svg{width:13px;height:13px;stroke:rgba(255,255,255,.62);stroke-width:2;fill:none;stroke-linecap:round;}
+.range{font-size:34px;font-weight:700;letter-spacing:-.025em;margin-top:9px;}
+.range span{font-size:14px;font-weight:500;color:rgba(255,255,255,.7);margin-left:6px;}
+.expl{font-size:11.5px;color:rgba(255,255,255,.9);line-height:1.5;background:rgba(255,255,255,.13);border-radius:11px;padding:10px 12px;margin-top:12px;}
+.tri{border-radius:13px;background:rgba(255,255,255,.12);margin-top:13px;padding:4px;}
+.tri .row{display:flex;align-items:center;gap:9px;padding:8px 7px;cursor:pointer;}
+.tri .badge{width:30px;height:30px;border-radius:9px;background:#fff;color:var(--slate);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 7px rgba(15,18,24,.2);}
+.tri .row.nobadge{padding-left:11px;}
+.tri .t1{font-size:12px;font-weight:700;line-height:1.3;display:block;}
+.tri .t2{font-size:10.5px;color:rgba(255,255,255,.68);display:block;margin-top:1px;}
+.tri .chev{margin-left:auto;color:rgba(255,255,255,.6);font-size:12px;transition:transform .2s;}
+.tri.open .chev{transform:rotate(180deg);}
+.tri .body{display:none;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.92);background:rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;margin:2px 4px 4px;}
+.tri.open .body{display:block;}
+.upnext{display:flex;justify-content:space-between;align-items:center;margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.2);}
+.upnext .l{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);}
+.upnext .r{font-size:13px;font-weight:600;}
+.chk{display:flex;gap:11px;align-items:center;}
+.chk .ic{width:34px;height:34px;border-radius:12px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;flex:none;}
+.chk .ic svg{width:16px;height:16px;stroke:var(--green);stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.chk .t{font-size:13.5px;font-weight:700;}
+.chk .s{font-size:12px;color:var(--sec);margin-top:1px;}
+.divider{height:1px;background:var(--line);margin:14px 0;}
+.rlab{font-size:12px;color:var(--sec);margin-top:11px;}
+.rval{font-size:13.5px;font-weight:600;margin-top:2px;}
+.ch{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.body-sm{font-size:12px;color:var(--sec);line-height:1.55;margin-top:5px;}
+/* journey stepper, straight from the app */
+.steps{position:relative;margin-top:12px;}
+.steps:before{content:"";position:absolute;left:10px;top:12px;bottom:14px;width:2px;background:var(--line2);}
+.steps .jstep{position:relative;display:flex;align-items:flex-start;gap:13px;padding:6px 0;}
+.dot{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;z-index:2;background:#fff;}
+.dot i{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.dot.done i{background:var(--slate);}
+.dot.done svg{width:11px;height:11px;stroke:#fff;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.dot.now i{background:var(--slate);box-shadow:0 0 0 4px #E3E8EC;}
+.dot.future i{background:#DDE0E5;}
+.steps .jstep .lab{font-size:13.5px;font-weight:500;flex:1;padding-top:1px;}
+.steps .jstep.now .lab{font-weight:600;}
+.steps .jstep.future .lab{color:var(--mut);font-weight:400;}
+.steps .jstep .meta{display:block;font-size:11px;font-weight:600;color:var(--slate);margin-top:1px;}
+.steps .jstep .t{margin-left:auto;flex:none;font-size:11.5px;font-weight:500;color:var(--sec);padding-top:2px;}
+/* stepper on the dark wait card */
+.pcard.dark .steps:before{background:rgba(255,255,255,.28);}
+.pcard.dark .dot{background:var(--slate);}
+.pcard.dark .dot.done i{background:#fff;}
+.pcard.dark .dot.done svg{stroke:var(--slate);}
+.pcard.dark .dot.now i{background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.22);}
+.pcard.dark .dot.future i{background:rgba(255,255,255,.3);}
+.pcard.dark .jstep .meta{color:rgba(255,255,255,.78);}
+.pcard.dark .jstep .t{color:rgba(255,255,255,.65);}
+.pcard.dark .jstep.future .lab{color:rgba(255,255,255,.55);}
+.thumb-row{display:flex;gap:12px;margin-top:14px;}
+.thumb{flex:1;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;font-size:12px;color:var(--sec);text-align:center;line-height:1.4;}
+.thumb b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px;}
+.mini{overflow:hidden;pointer-events:none;margin-top:6px;}
+.mini .mscreen{width:312px;text-align:left;transform-origin:top left;}
+/* one-task-at-a-time cards */
+.tcard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px;display:none;}
+.tcard.act{display:block;animation:rise .3s ease both;}
+.tcard label.q{margin-top:14px;}
+.tcard label.q:first-of-type{margin-top:0;}
+.tcard .btn{margin-top:16px;height:46px;}
+.tprog{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;}
+.microw{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.micbtn{border:1.5px solid var(--line2);background:#fff;border-radius:12px;padding:10px 14px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;}
+.micbtn.live{border-color:#C0392B;color:#C0392B;animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.25);}50%{box-shadow:0 0 0 7px rgba(192,57,43,0);}}
+.micstate{font-size:12.5px;color:var(--mut);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="banner" id="previewBanner">Preview mode: no data endpoint is set. Responses will print to the console instead of sending.</div>
+
+<!-- 0 · welcome -->
+<section class="step show" id="s0">
+  <div class="banner" id="doneBanner" style="background:#FFF6E5;border-color:#F0DCA8;color:#8a6412;">Looks like you've already finished this one on this device &mdash; thank you! No need to take it again.</div>
+  <h1>Help us test an ER waiting room app</h1>
+  <p class="lead">You'll look at two versions of one phone screen, answer a few questions about each, and tell us which you'd rather have during a real ER visit. It takes about 5 to 7 minutes.</p>
+  <div class="card">
+    <h2>Before you start</h2>
+    <p class="lead" style="margin-top:6px;">Your answers are anonymous — we don't collect your name or email. One question on each screen offers an optional voice recording: if you use it, only the researcher listens, and recordings are deleted when the project ends. Prefer not to record? Just type instead. There are no right or wrong answers; we're testing the designs, not you. You can stop at any time by closing this page.</p>
+    <label class="consent"><input type="checkbox" id="consentBox" onchange="document.getElementById('startBtn').disabled=!this.checked">
+      I understand this is a student research study, my answers are anonymous, and I agree to take part.</label>
+  </div>
+  <button class="btn" id="startBtn" disabled onclick="start()">Start</button>
+</section>
+
+<!-- 1 · scenario -->
+<section class="step" id="s1">
+  <div class="prog">The situation</div>
+  <h1>Imagine this is you</h1>
+  <div class="card">
+    <p class="lead" style="margin-top:0;">You came to the emergency room this morning with chest discomfort. A nurse checked you at the front desk about ten minutes ago and said you're safe to wait. You're now sitting in the waiting room.</p>
+    <p class="lead">The hospital has an app for patients. On the next page you'll see its main screen, with one small task at a time above it. Use the screen like you would on your own phone — tap anything. On the first task you can record your answer out loud instead of typing, if you like.</p>
+  </div>
+  <button class="btn" onclick="showVariant(0)">Show me the screen</button>
+</section>
+
+<!-- 2 · variant view: one task at a time, the screen stays present throughout (reused for both variants) -->
+<section class="step" id="sV">
+  <div class="prog" id="vProg">Screen 1 of 2</div>
+
+  <div class="tcard task" id="t_think">
+    <div class="tprog">Task 1 of 4</div>
+    <label class="q">Take a moment with the screen below. In your own words, what is it telling you about your situation?</label>
+    <div class="microw" id="micRow">
+      <button type="button" class="micbtn" id="micBtn" onclick="toggleMic()">&#127908; Record your answer</button>
+      <span class="micstate" id="micState">Optional — only the researcher hears it.</span>
+    </div>
+    <audio id="recPlay" controls style="display:none;width:100%;margin:2px 0 10px;"></audio>
+    <textarea data-q="think" placeholder="Record with the button above, or just type. A sentence or two is plenty."></textarea>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_wait">
+    <div class="tprog">Task 2 of 4</div>
+    <label class="q">How long does the app say you'll likely wait?</label>
+    <div class="opts" data-q="wait">
+      <button class="opt-btn" data-v="under15">Under 15 minutes</button>
+      <button class="opt-btn" data-v="15-30">15 to 30 minutes</button>
+      <button class="opt-btn" data-v="30-60">30 to 60 minutes</button>
+      <button class="opt-btn" data-v="45-90">45 to 90 minutes</button>
+      <button class="opt-btn" data-v="cantfind">I can't find it</button>
+    </div>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_understand">
+    <div class="tprog">Task 3 of 4</div>
+    <label class="q">The screen explains what kind of visit to expect. Look at it (open the explanation if you need to), then choose what's closest to what it's telling you.</label>
+    <div class="opts" data-q="understand">
+      <button class="opt-btn" data-v="severity">Mostly how sick I am right now</button>
+      <button class="opt-btn" data-v="steps">Mostly how many steps my care will likely take</button>
+      <button class="opt-btn" data-v="howlong">Exactly how long I'll be waiting</button>
+      <button class="opt-btn" data-v="notfound">I couldn't find anything explaining this</button>
+    </div>
+    <button class="btn tnext" disabled onclick="nextTask()">Next</button>
+  </div>
+
+  <div class="tcard task" id="t_feel">
+    <div class="tprog">Task 4 of 4</div>
+    <label class="q">How clear is this screen?</label>
+    <div class="scale" data-q="clarity">
+      <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
+    </div>
+    <div class="scale-labels"><span>Very confusing</span><span>Very clear</span></div>
+    <label class="q">How does this screen make you feel about your wait?</label>
+    <div class="scale" data-q="worry">
+      <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
+    </div>
+    <div class="scale-labels"><span>Much calmer</span><span>Much more worried</span></div>
+    <label class="q">How much do you trust what this screen is telling you?</label>
+    <div class="scale" data-q="trust">
+      <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button>
+    </div>
+    <div class="scale-labels"><span>Not at all</span><span>Completely</span></div>
+    <label class="q">Did the app feel like it was being straight with you about your situation?</label>
+    <div class="opts" data-q="straight">
+      <button class="opt-btn" data-v="yes">Yes, it felt straight with me</button>
+      <button class="opt-btn" data-v="somewhat">Somewhat</button>
+      <button class="opt-btn" data-v="no">No, it felt like it was holding something back</button>
+    </div>
+    <label class="q">Anything confusing or hard to find? <span class="opt">(optional)</span></label>
+    <textarea data-q="confusing" placeholder="Leave blank if nothing comes to mind"></textarea>
+    <button class="btn tnext" disabled onclick="nextTask()">Continue</button>
+  </div>
+
+  <div id="phoneMount"></div>
+</section>
+
+<!-- 4 · comparison -->
+<section class="step" id="sC">
+  <div class="prog">Comparing the two</div>
+  <h2>You saw two versions of the same screen</h2>
+  <div class="thumb-row">
+    <div class="thumb"><b>First screen</b><div class="mini" id="miniA"></div></div>
+    <div class="thumb"><b>Second screen</b><div class="mini" id="miniB"></div></div>
+  </div>
+
+  <label class="q">Which one felt more honest about your situation?</label>
+  <div class="opts" data-q="cmp_honest">
+    <button class="opt-btn" data-v="first">The first screen</button>
+    <button class="opt-btn" data-v="second">The second screen</button>
+    <button class="opt-btn" data-v="nodiff">No real difference</button>
+  </div>
+
+  <label class="q">Which made it clearer what to expect from your visit?</label>
+  <div class="opts" data-q="cmp_clear">
+    <button class="opt-btn" data-v="first">The first screen</button>
+    <button class="opt-btn" data-v="second">The second screen</button>
+    <button class="opt-btn" data-v="nodiff">No real difference</button>
+  </div>
+
+  <label class="q">In a real ER visit, which would you rather have?</label>
+  <div class="opts" data-q="cmp_prefer">
+    <button class="opt-btn" data-v="first">The first screen</button>
+    <button class="opt-btn" data-v="second">The second screen</button>
+    <button class="opt-btn" data-v="nopref">No preference</button>
+  </div>
+
+  <label class="q">Why?</label>
+  <textarea data-q="cmp_why" placeholder="A sentence or two"></textarea>
+
+  <button class="btn" id="cNext" disabled onclick="afterComparison()">Continue</button>
+</section>
+
+<!-- 5 · wrap-up -->
+<section class="step" id="sW">
+  <div class="prog">Last page</div>
+  <h2>About you</h2>
+  <p class="lead" style="margin-top:4px;">Two quick questions, still anonymous.</p>
+
+  <label class="q">Have you been to a hospital emergency room in the last two years, for yourself or with someone else?</label>
+  <div class="opts" data-q="wrap_er">
+    <button class="opt-btn" data-v="yes">Yes</button>
+    <button class="opt-btn" data-v="no">No</button>
+    <button class="opt-btn" data-v="skip">Prefer not to say</button>
+  </div>
+
+  <label class="q">Your age group</label>
+  <div class="opts row" data-q="wrap_age">
+    <button class="opt-btn" data-v="18-24">18-24</button>
+    <button class="opt-btn" data-v="25-34">25-34</button>
+    <button class="opt-btn" data-v="35-49">35-49</button>
+    <button class="opt-btn" data-v="50-64">50-64</button>
+    <button class="opt-btn" data-v="65+">65+</button>
+    <button class="opt-btn" data-v="skip">Skip</button>
+  </div>
+
+  <label class="q">Anything else you want to tell us? <span class="opt">(optional)</span></label>
+  <textarea data-q="comments"></textarea>
+
+  <button class="btn" id="wNext" disabled onclick="submitAll()">Finish and send</button>
+  <div class="err" id="sendErr">We couldn't send your answers automatically. Please tap the button below to download them, and email the file to the researcher. Thank you!</div>
+  <button class="btn" id="dlBtn" style="display:none;background:var(--slate);" onclick="downloadData()">Download my answers</button>
+</section>
+
+<!-- 6 · thanks -->
+<section class="step" id="sT">
+  <h1>Thank you!</h1>
+  <p class="lead">Your answers were sent. You've directly helped design a calmer ER experience.</p>
+  <a class="btn" href="index.html" style="text-decoration:none;text-align:center;line-height:52px;">&larr; Back to all tests</a>
+</section>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+/* Google Apps Script web app URL. Same collector as study 1; the study field below
+   routes this study's rows to their own tab (esi_responses) and its own counter.
+   Leave empty to run in preview mode (nothing is sent). */
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzSfX4_MXiQhUquXxCEzwa6RO0o05KhRqVLsaRR7Wm7tjH5Rep8AI8VFNxzwmLol_tj/exec';
+const STUDY='esi';
+/* ========================================== */
+
+/* ---------- per-device "already taken" memory (powers the hub's kiosk flow) ---------- */
+const DONE_KEY='navhealth_done';
+function doneList(){ try{ return JSON.parse(localStorage.getItem(DONE_KEY)||'[]'); }catch(e){ return []; } }
+function markDone(id){ try{ const l=doneList(); if(l.indexOf(id)<0){ l.push(id); localStorage.setItem(DONE_KEY, JSON.stringify(l)); } }catch(e){} }
+const IS_TEST=/(^|[?&])test\b/.test(location.search);
+if(!IS_TEST && doneList().indexOf(STUDY)>=0){ const _b=document.getElementById('doneBanner'); if(_b) _b.style.display='block'; }
+
+/* Study 1A — show the ESI number, or don't.
+   Both arms use the same layout: the journey stepper lives INSIDE the estimated-wait card.
+   The ONLY thing that differs is the triage priority indicator:
+     number = ESI badge "3" + "Triage level 3" + translation
+     nonum  = no badge, no numeral, plain-language "what to expect" + the same translation */
+const CHECK_SVG='<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+const STEPS_HTML=`
+  <div class="steps" data-log="journey-steps" onclick="event.stopPropagation();logClick('journey-steps')">
+    <div class="jstep done"><div class="dot done"><i>${CHECK_SVG}</i></div><div class="lab">Checked in</div><span class="t">9:31 AM</span></div>
+    <div class="jstep done"><div class="dot done"><i>${CHECK_SVG}</i></div><div class="lab">Triage assessment</div><span class="t">9:39 AM</span></div>
+    <div class="jstep now"><div class="dot now"><i></i></div><div class="lab">Seeing a clinician<span class="meta">Up next</span></div></div>
+    <div class="jstep future"><div class="dot future"><i></i></div><div class="lab">Treatment &amp; next steps</div></div>
+  </div>`;
+/* number arm: badge + "Triage level 3" + translation with the number-anchored "doesn't mean" line */
+const PANEL_NUMBER=`
+  <div class="tri" data-log="explain-panel" onclick="event.stopPropagation();this.classList.toggle('open');logClick('explain-panel')">
+    <div class="row">
+      <div class="badge">3</div>
+      <div style="flex:1;"><span class="t1">Triage level 3: stable, multiple steps expected</span><span class="t2">What does this mean?</span></div>
+      <div class="chev">&#9660;</div>
+    </div>
+    <div class="body"><b>What it means:</b> You're stable, and your care will likely involve two or more steps, like bloodwork plus a scan. That makes yours a longer kind of visit.<br><br><b>What it doesn't mean:</b> It's not a score of how sick you feel. It's an estimate of how many steps your care will take.</div>
+  </div>`;
+/* nonum arm: no badge, no numeral, no "level" — plain-language head + the same translation, de-numbered */
+const PANEL_NONUM=`
+  <div class="tri" data-log="explain-panel" onclick="event.stopPropagation();this.classList.toggle('open');logClick('explain-panel')">
+    <div class="row nobadge">
+      <div style="flex:1;"><span class="t1">What to expect: a stable, multi-step visit</span><span class="t2">What does this mean?</span></div>
+      <div class="chev">&#9660;</div>
+    </div>
+    <div class="body"><b>What it means:</b> You're stable, and your care will likely involve two or more steps, like bloodwork plus a scan. That makes yours a longer kind of visit.<br><br><b>What it doesn't mean:</b> This is about how many steps your care will take, not how sick you are.</div>
+  </div>`;
+const WAIT_TOP=`
+  <div class="wc-head"><span class="kick">Estimated wait time</span><button class="wc-info" data-log="wait-info" onclick="event.stopPropagation();toggleExpl(this);logClick('wait-info')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div>
+  <div class="range">30-60<span>mins</span></div>
+  <div class="expl" style="display:none;">This range is a conservative estimate based on how busy the ER is right now and your triage priority.</div>`;
+const FRAME_TOP=`
+  <div class="island"></div>
+  <div class="sbar"><span>9:41</span><span class="ic">
+    <svg viewBox="0 0 18 12"><g fill="#14171C"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g></svg>
+    <svg viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#14171C" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="1.6" fill="#14171C"/><path d="M23.5 4v4c1-.3 1.5-1 1.5-2s-.5-1.7-1.5-2z" fill="#14171C" fill-opacity=".4"/></svg>
+  </span></div>`;
+const HEADROW=`
+  <div class="headrow">
+    <div><div class="ptitle">You're waiting</div><div class="psub">Updated just now</div></div>
+    <button class="menubtn" data-log="menu" onclick="logClick('menu')"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>`;
+const REVIEWED=`
+  <div class="pcard" data-log="reviewed-card" onclick="logClick('reviewed-card')" style="display:flex;">
+    <div class="chk"><div class="ic">${CHECK_SVG}</div><div><div class="t">A nurse has reviewed your arrival</div><div class="s">You're safe to wait here.</div></div></div>
+  </div>`;
+const HAPPENING=`
+  <div class="pcard" data-log="happening-card" onclick="logClick('happening-card')">
+    <div class="ch">What's happening now</div>
+    <p class="body-sm">A clinician has reviewed you. The team is freeing up a treatment space and checks on waiting patients regularly.</p>
+  </div>`;
+function phoneShell(inner){
+  return `<div class="device"><div class="shost">${FRAME_TOP}<div class="pscroll">${HEADROW}${inner}</div></div></div>`;
+}
+function waitCard(panel){
+  return `
+    ${REVIEWED}
+    <div class="pcard dark" data-log="wait-card" onclick="logClick('wait-card')">
+      ${WAIT_TOP}
+      ${panel}
+      <div class="kick" style="margin-top:15px;">Your journey</div>
+      ${STEPS_HTML}
+    </div>
+    <div class="pcard" data-log="checkin-card" onclick="logClick('checkin-card')">
+      <div class="kick">Your check-in</div>
+      <div class="rlab">Reason for visit</div>
+      <div class="rval">Chest discomfort, started this morning</div>
+    </div>
+    ${HAPPENING}`;
+}
+const VARIANTS={
+  number:{ label:'ESI number shown', inner:waitCard(PANEL_NUMBER) },
+  nonum:{  label:'No number, translation only', inner:waitCard(PANEL_NONUM) }
+};
+const VKEYS=['number','nonum'];
+
+/* ---------- state ---------- */
+let pid=null, order=null;           /* order: ['number','nonum'] or reversed */
+let vIndex=0;                        /* which variant is on screen (0 or 1) */
+let vStart=0;
+const data={
+  study:STUDY,
+  startedAt:new Date().toISOString(),
+  ua:navigator.userAgent, vw:window.innerWidth+'x'+window.innerHeight
+};
+const clicks={number:[],nonum:[]};
+
+/* ---------- assignment (counterbalanced, own counter for this study) ---------- */
+async function assign(){
+  if(SCRIPT_URL){
+    try{
+      const r=await fetch(SCRIPT_URL+'?fn=assign&study='+encodeURIComponent(STUDY),{redirect:'follow'});
+      const j=await r.json();
+      pid=j.pid;
+    }catch(e){ pid=null; }
+  }
+  if(pid==null){ pid='r'+Date.now().toString(36); }
+  const n=(typeof pid==='number')?pid:Math.floor(Math.random()*2)+1;
+  order=(n%2===1)?['number','nonum']:['nonum','number'];   /* odd = number-first */
+  data.pid=pid; data.order=order.join('>');
+  data.first_variant=order[0]; data.second_variant=order[1];
+}
+if(!SCRIPT_URL) document.getElementById('previewBanner').style.display='block';
+
+/* ---------- flow ---------- */
+function show(id){document.querySelectorAll('.step').forEach(s=>s.classList.remove('show'));document.getElementById(id).classList.add('show');window.scrollTo(0,0);}
+let started=false;
+async function start(){
+  if(started) return; started=true;                      /* guard: double-clicking Start must not consume two participant numbers */
+  document.getElementById('startBtn').disabled=true;
+  await assign(); show('s1');
+}
+function showVariant(i){
+  vIndex=i;
+  const key=order[i];
+  document.getElementById('vProg').textContent='Screen '+(i+1)+' of 2';
+  document.getElementById('phoneMount').innerHTML=phoneShell(VARIANTS[key].inner);
+  resetQuestions('sV');
+  setMicUI(false);
+  const ms=document.getElementById('micState');
+  if(ms) ms.textContent='Optional — only the researcher hears it.';
+  const au=document.getElementById('recPlay');
+  if(au){ if(au.src) URL.revokeObjectURL(au.src); au.removeAttribute('src'); au.style.display='none'; }
+  vStart=Date.now();
+  show('sV');
+  showTask(0);
+}
+
+/* ---------- one-task-at-a-time engine (time on task recorded silently) ---------- */
+const TASK_IDS=['t_think','t_wait','t_understand','t_feel'];
+const TASK_REQ={t_think:['think'],t_wait:['wait'],t_understand:['understand'],t_feel:['clarity','worry','trust','straight']};
+const TASK_TIMEKEY={t_think:'think_ms',t_wait:'wait_ms',t_understand:'understand_ms',t_feel:'feel_ms'};
+let taskIndex=0, taskStart=0;
+function showTask(i){
+  taskIndex=i;
+  TASK_IDS.forEach((id,j)=>document.getElementById(id).classList.toggle('act',j===i));
+  taskStart=Date.now();
+  gateTask();
+}
+function gateTask(){
+  const id=TASK_IDS[taskIndex];
+  const card=document.getElementById(id);
+  let ok;
+  if(id==='t_think'){
+    /* a recording OR typed text satisfies the think-aloud task */
+    ok=card.querySelector('[data-q="think"]').value.trim().length>0 || !!recBlob[order[vIndex]];
+  }else{
+    ok=TASK_REQ[id].every(q=>{
+      const el=card.querySelector('[data-q="'+q+'"]');
+      if(!el) return false;
+      if(el.tagName==='TEXTAREA') return el.value.trim().length>0;
+      return !!el.querySelector('.on');
+    });
+  }
+  card.querySelector('.tnext').disabled=!ok;
+}
+function nextTask(){
+  stopMic();
+  data[order[vIndex]+'_'+TASK_TIMEKEY[TASK_IDS[taskIndex]]]=Date.now()-taskStart;
+  if(taskIndex<TASK_IDS.length-1){ showTask(taskIndex+1); }
+  else{ afterScreen(); }
+}
+
+/* ---------- optional voice answers: real audio via MediaRecorder ----------
+   The recording is uploaded with the submission; the Apps Script saves it to
+   Drive and puts a link in the sheet. Typing remains the fallback everywhere. */
+const REC_LIMIT_MS=90000;                       /* 90s cap per recording */
+let mediaRec=null, recChunks=[], recTimer=null, recStartT=0;
+const recBlob={number:null,nonum:null};
+if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){
+  document.getElementById('micRow').style.display='none';
+}
+async function toggleMic(){
+  if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks=[];
+    mediaRec=new MediaRecorder(stream);
+    mediaRec.ondataavailable=e=>{ if(e.data&&e.data.size) recChunks.push(e.data); };
+    mediaRec.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      clearTimeout(recTimer);
+      const blob=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'});
+      recBlob[order[vIndex]]=blob;
+      setMicUI(false);
+      document.getElementById('micState').textContent='Recorded '+Math.max(1,Math.round((Date.now()-recStartT)/1000))+'s ✓ — check it below, or tap again to re-record.';
+      const au=document.getElementById('recPlay');
+      if(au.src) URL.revokeObjectURL(au.src);
+      au.src=URL.createObjectURL(blob);
+      au.style.display='block';
+      gateTask();
+    };
+    mediaRec.start();
+    recStartT=Date.now();
+    setMicUI(true);
+    clearTimeout(recTimer);
+    recTimer=setTimeout(()=>{ if(mediaRec&&mediaRec.state==='recording') mediaRec.stop(); },REC_LIMIT_MS);
+  }catch(e){
+    document.getElementById('micState').textContent='Microphone unavailable — typing works just as well.';
+  }
+}
+function stopMic(){ if(mediaRec&&mediaRec.state==='recording'){ mediaRec.stop(); } }
+function setMicUI(on){
+  const b=document.getElementById('micBtn'); if(!b) return;
+  b.classList.toggle('live',on);
+  b.innerHTML=on?'&#9632; Stop recording':'&#127908; Record your answer';
+  if(on) document.getElementById('micState').textContent='Recording… tap Stop when you’re done.';
+}
+async function blobB64(b){
+  if(!b) return '';
+  const bytes=new Uint8Array(await b.arrayBuffer());
+  let bin='';
+  for(let i=0;i<bytes.length;i+=32768){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768)); }
+  return btoa(bin);
+}
+function logClick(id){ const key=order[vIndex]; if(clicks[key]) clicks[key].push({t:Date.now()-vStart,id}); }
+function toggleExpl(el){ const x=el.closest('.pcard').querySelector('.expl'); x.style.display=(x.style.display==='none')?'block':'none'; }
+function afterScreen(){
+  const key=order[vIndex];
+  data[key+'_dwell_ms']=Date.now()-vStart;
+  collectAnswers('sV',key+'_');
+  if(vIndex===0){ showVariant(1); }
+  else{
+    show('sC');
+    mountMini('miniA',order[0]);
+    mountMini('miniB',order[1]);
+  }
+}
+/* render a small, non-interactive preview of a variant for side-by-side comparison */
+function mountMini(elId,key){
+  const el=document.getElementById(elId);
+  el.innerHTML='<div class="mscreen">'+VARIANTS[key].inner+'</div>';
+  const m=el.firstElementChild;
+  const scale=el.clientWidth/m.offsetWidth;
+  m.style.transform='scale('+scale+')';
+  el.style.height=Math.ceil(m.offsetHeight*scale)+'px';
+}
+function afterComparison(){
+  collectAnswers('sC','');
+  /* translate "first/second" into the actual variant name so the sheet is readable on its own */
+  const res=v=>v==='first'?order[0]:v==='second'?order[1]:v;
+  data.cmp_honest_variant=res(data.cmp_honest);
+  data.cmp_clear_variant=res(data.cmp_clear);
+  data.cmp_prefer_variant=res(data.cmp_prefer);
+  show('sW');
+}
+
+/* ---------- generic answer widgets ---------- */
+document.querySelectorAll('.opts,.scale').forEach(g=>{
+  g.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const sid=g.closest('.step').id;
+    if(sid==='sV') gateTask(); else checkRequired(sid);
+  });
+});
+document.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',()=>{
+  const sid=t.closest('.step').id;
+  if(sid==='sV') gateTask(); else checkRequired(sid);
+}));
+const REQUIRED={
+  sC:['cmp_honest','cmp_clear','cmp_prefer'],
+  sW:['wrap_er','wrap_age']
+};
+const NEXTBTN={sC:'cNext',sW:'wNext'};
+function checkRequired(stepId){
+  const req=REQUIRED[stepId]; if(!req) return;
+  const step=document.getElementById(stepId);
+  const ok=req.every(q=>step.querySelector('[data-q="'+q+'"] .on'));
+  document.getElementById(NEXTBTN[stepId]).disabled=!ok;
+}
+function collectAnswers(stepId,prefix){
+  const step=document.getElementById(stepId);
+  step.querySelectorAll('[data-q]').forEach(el=>{
+    const q=el.dataset.q;
+    if(el.tagName==='TEXTAREA'||el.tagName==='INPUT') data[prefix+q]=el.value.trim();
+    else{ const on=el.querySelector('.on'); data[prefix+q]=on?on.dataset.v:''; }
+  });
+}
+function resetQuestions(stepId){
+  const step=document.getElementById(stepId);
+  step.querySelectorAll('.on').forEach(b=>b.classList.remove('on'));
+  step.querySelectorAll('textarea').forEach(t=>t.value='');
+  step.querySelectorAll('.tnext').forEach(b=>b.disabled=true);
+  if(NEXTBTN[stepId]) document.getElementById(NEXTBTN[stepId]).disabled=true;
+}
+
+/* ---------- submit ---------- */
+/* Fixed column order for the sheet: identity → screen answers → comparison → wrap-up → logs/meta.
+   The tab's header row is created from the first submission, so this order = the tab's order. */
+const COLS=['pid','study','test','order','first_variant','second_variant',
+  'number_think','number_think_audio','number_think_ms','number_wait','number_wait_ms','number_understand','number_understand_ms','number_opened_explain','number_clarity','number_worry','number_trust','number_straight','number_feel_ms','number_confusing','number_dwell_ms',
+  'nonum_think','nonum_think_audio','nonum_think_ms','nonum_wait','nonum_wait_ms','nonum_understand','nonum_understand_ms','nonum_opened_explain','nonum_clarity','nonum_worry','nonum_trust','nonum_straight','nonum_feel_ms','nonum_confusing','nonum_dwell_ms',
+  'cmp_honest_variant','cmp_clear_variant','cmp_prefer_variant','cmp_why','cmp_honest','cmp_clear','cmp_prefer',
+  'wrap_er','wrap_age','comments',
+  'clicks_number','clicks_nonum','startedAt','completedAt','ua','vw'];
+let payload=null;
+async function submitAll(){
+  collectAnswers('sW','');
+  /* open the page with ?test at the end of the URL to mark your own dry runs */
+  data.test=/(^|[?&])test\b/.test(location.search)?'TEST':'';
+  /* behavioral task success: did they actually open the explainer on each screen? */
+  data.number_opened_explain=clicks.number.some(c=>c.id==='explain-panel');
+  data.nonum_opened_explain=clicks.nonum.some(c=>c.id==='explain-panel');
+  data.clicks_number=JSON.stringify(clicks.number);
+  data.clicks_nonum=JSON.stringify(clicks.nonum);
+  data.completedAt=new Date().toISOString();
+  data.variants=VKEYS.join(',');   /* tells the Apps Script which audio columns to save */
+  payload={}; COLS.forEach(k=>payload[k]=(data[k]!==undefined)?data[k]:'');
+  payload.study=STUDY; payload.variants=data.variants;
+  const btn=document.getElementById('wNext'); btn.disabled=true; btn.textContent='Sending…';
+  /* attach voice recordings (if any) as base64; the Apps Script saves them to Drive
+     and replaces these with links in the _think_audio columns */
+  if(recBlob.number){ payload.number_think_audio_b64=await blobB64(recBlob.number); payload.number_think_audio_mime=recBlob.number.type||'audio/webm'; }
+  if(recBlob.nonum){ payload.nonum_think_audio_b64=await blobB64(recBlob.nonum); payload.nonum_think_audio_mime=recBlob.nonum.type||'audio/webm'; }
+  if(!SCRIPT_URL){ console.log('PREVIEW MODE · payload:',payload); markDone(STUDY); show('sT'); return; }
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    markDone(STUDY); show('sT');
+  }catch(e){
+    document.getElementById('sendErr').style.display='block';
+    document.getElementById('dlBtn').style.display='block';
+    btn.textContent='Finish and send'; btn.disabled=false;
+  }
+}
+/* debug/test handle (not used by participants) */
+window.__study={get order(){return order},get data(){return data},get clicks(){return clicks}};
+function downloadData(){
+  const blob=new Blob([JSON.stringify(payload||data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='nav-health-esi-study-'+(data.pid||'session')+'.json';
+  a.click();
+}
+</script>
+</body>
+</html>
